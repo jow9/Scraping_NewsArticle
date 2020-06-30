@@ -12,7 +12,7 @@ require 'csv'
 
 
 url = 'https://news.livedoor.com/'
-max_article_num = 1
+max_article_num = 5
 
 agent = Mechanize.new #agent:ブラウザのようなもの
 agent.max_history = 2 #キャッシュの保存量の設定 デフォルトでは無限に保存する
@@ -25,6 +25,7 @@ p url
 article_genres = [] #記事のジャンル
 article_titles = [] #記事のタイトル
 article_texts = [] #記事の本文
+article_img = [] #記事の関連画像
 
 main = agent.get(url) #トップページ
 
@@ -35,6 +36,7 @@ links.search('a').each do |link|
     count = 0 #1つのジャンルについて何個の記事を取得してきたかカウントする。カウントがmax_article_numに達したら取得を中断
     titles = []
     texts = []
+    img_srcs = []
 
     #「トレンド」以降の記事は例外として弾く
     if link.text == "トレンド" then
@@ -84,8 +86,18 @@ links.search('a').each do |link|
         text_ele = next_page.search('span[@itemprop="articleBody"]')
         text = text_ele.text
         text = text.delete("\n")
+        text = text.delete("\t")
+        text = text.strip
         texts.push(text)
         p text
+        
+        #本文と合わせて画像の取得を行う
+        img_src = next_page.search('figure[@class="articleImage"]/a/img')
+        if img_src.length > 0 then
+            img_srcs.push(img_src.attribute('src').value)
+        else
+            img_srcs.push("null")
+        end
 
     
         #カウントがmax_article_numに達したら記事取得を中断
@@ -100,18 +112,18 @@ links.search('a').each do |link|
     #1つのジャンル内にある複数記事のタイトルと本文をリストに保存
     article_titles.push(titles)
     article_texts.push(texts)
+    article_img.push(img_srcs)
 end
 
 
 #CSVに出力
 id = 0
-p article_genres.size
 CSV.open("livedoor_news_data.csv", "w") do |csv|
-    csv << ["id", "genre", "title", "text"]
+    csv << [] #"id", "genre", "title", "imgsrc", "text"
     i = 0
     article_genres.each do |genre|
         for j in 0..max_article_num do
-            csv << [id, genre, article_titles[i][j], article_texts[i][j]]
+            csv << [id, genre, article_titles[i][j], article_img[i][j], article_texts[i][j]]
             j += 1
             id += 1
         end
