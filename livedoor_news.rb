@@ -12,7 +12,7 @@ require 'csv'
 
 
 url = 'https://news.livedoor.com/'
-max_article_num = 5
+max_article_num = 1
 
 agent = Mechanize.new #agent:ブラウザのようなもの
 agent.max_history = 2 #キャッシュの保存量の設定 デフォルトでは無限に保存する
@@ -106,7 +106,7 @@ links.search('a').each do |link|
             break
         end
 
-        sleep 1 #読み込み速度を調整してリンク先への負荷を軽減
+        sleep 2 #読み込み速度を調整してリンク先への負荷を軽減
     end
 
     #1つのジャンル内にある複数記事のタイトルと本文をリストに保存
